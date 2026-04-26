@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nómina — Analiza tu nómina</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+<header class="app-header">
+  <div class="header-inner">
+    <div class="app-logo"><div class="logo-icon">N</div>Nómina</div>
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="nominas">Mis Nóminas</button>
+      <button class="tab-btn" data-tab="anadir">Añadir</button>
+      <button class="tab-btn" data-tab="analitica">Analítica</button>
+      <button class="tab-btn" data-tab="exportar">Exportar</button>
+    </nav>
+  </div>
+</header>
+<main class="page">
+  <section id="view-nominas"   class="view active"></section>
+  <section id="view-anadir"    class="view"></section>
+  <section id="view-analitica" class="view"></section>
+  <section id="view-exportar"  class="view"></section>
+</main>
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/state.js"></script>
+<script src="js/views-nominas.js"></script>
+<script src="js/views-form.js"></script>
+<script src="js/views-analytics.js"></script>
+<script src="js/views-export.js"></script>
+</body>
+</html>
