@@ -31,17 +31,53 @@ if (typeof pdfjsLib !== 'undefined') {
   
   function extractNumber(str) {
     const clean = str.replace(/[€$£%]/g, '').trim();
-    let m = clean.match(/(\d{1,3}(?:\.\d{3})+),(\d{1,2})\b/);
-    if (m) return parseFloat(m[1].replace(/\./g, '') + '.' + m[2]);
-    m = clean.match(/\b(\d{1,6}),(\d{2})\b/);
-    if (m) return parseFloat(m[1] + '.' + m[2]);
-    m = clean.match(/(\d{1,3}(?:,\d{3})+)\.(\d{1,2})\b/);
-    if (m) return parseFloat(m[1].replace(/,/g, '') + '.' + m[2]);
-    m = clean.match(/\b(\d{1,6})\.(\d{2})\b/);
-    if (m) return parseFloat(m[1] + '.' + m[2]);
-    m = clean.match(/\b(\d{1,6})\b/);
-    if (m) return parseFloat(m[1]);
-    return null;
+
+    // Find the first numeric token in the string. Two shapes are accepted:
+    //   1) Digits with thousands separators: 1.850,50 / 1,850.50 / 1.234.567
+    //   2) Plain digits with optional decimal: 1500,00 / 1500.00 / 1500
+    // The first alternative REQUIRES at least one thousands group, otherwise
+    // greedy matching of \d{1,3} would gobble "150" out of "1500,00".
+    const m = clean.match(/-?\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{1,2})?|-?\d+(?:[.,]\d{1,2})?/);
+    if (!m) return null;
+    let token = m[0];
+
+    const hasComma = token.includes(',');
+    const hasDot = token.includes('.');
+
+    if (hasComma && hasDot) {
+      // Mixed: whichever appears LAST is the decimal separator.
+      // "1.850,50" -> comma is decimal -> 1850.50
+      // "1,850.50" -> dot is decimal   -> 1850.50
+      const lastComma = token.lastIndexOf(',');
+      const lastDot = token.lastIndexOf('.');
+      if (lastComma > lastDot) {
+        // Spanish: dots are thousands, comma is decimal
+        token = token.replace(/\./g, '').replace(',', '.');
+      } else {
+        // US: commas are thousands, dot is decimal
+        token = token.replace(/,/g, '');
+      }
+    } else if (hasComma) {
+      // Comma only. If it's followed by exactly 1-2 digits it's a decimal,
+      // otherwise (3 digits) it's a thousands separator.
+      const after = token.split(',').pop();
+      if (after.length <= 2) token = token.replace(',', '.');
+      else token = token.replace(/,/g, '');
+    } else if (hasDot) {
+      // Dot only. Same logic: 1-2 trailing digits = decimal, 3 = thousands.
+      // This is the case that was broken: "2.500" must become 2500, not 2.50.
+      const parts = token.split('.');
+      const last = parts[parts.length - 1];
+      if (parts.length === 2 && last.length <= 2) {
+        // already in JS-parsable form, e.g. "12.50"
+      } else {
+        // Thousands separators: "2.500" or "1.234.567"
+        token = parts.join('');
+      }
+    }
+
+    const n = parseFloat(token);
+    return isNaN(n) ? null : n;
   }
   
   function findValue(lines, patterns) {

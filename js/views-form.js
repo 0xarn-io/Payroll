@@ -1,6 +1,14 @@
 function renderAnadir(id = null) {
     STATE.editingId = id;
     const p = id ? getById(id) : null;
+    resetEditedTracking();
+    // When editing an existing payslip, mark fields-with-values as user-set
+    // so autoCalc treats them as authoritative and doesn't overwrite them.
+    if (p) {
+      if (p.total_devengos != null) USER_EDITED.add('f-total-devengos');
+      if (p.irpf != null) USER_EDITED.add('f-irpf');
+      if (p.neto != null) USER_EDITED.add('f-neto');
+    }
     const el = document.getElementById('view-anadir');
     el.innerHTML = `
       <div class="flex-between mb-6">
@@ -34,12 +42,12 @@ function renderAnadir(id = null) {
         <div class="form-section devengos mt-4">
           <div class="form-section-title">Devengos (ingresos)</div>
           <div class="form-grid triple">
-            <div class="form-group"><label>Salario base</label><input type="number" id="f-salario-base" step="0.01" min="0" placeholder="0,00" value="${p?.salario_base||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>Complementos</label><input type="number" id="f-complementos" step="0.01" min="0" placeholder="0,00" value="${p?.complementos||''}" oninput="autoCalc()"><span class="field-hint">Plus transporte, antigüedad…</span></div>
-            <div class="form-group"><label>Horas extraordinarias</label><input type="number" id="f-horas-extra" step="0.01" min="0" placeholder="0,00" value="${p?.horas_extra||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>Paga extra (prorrateada)</label><input type="number" id="f-paga-extra" step="0.01" min="0" placeholder="0,00" value="${p?.paga_extra||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>Otros devengos</label><input type="number" id="f-otros-devengos" step="0.01" min="0" placeholder="0,00" value="${p?.otros_devengos||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>Total devengos (bruto) *</label><input type="number" id="f-total-devengos" step="0.01" min="0" placeholder="0,00" value="${p?.total_devengos||''}" required oninput="autoCalc()"><span class="field-hint">Campo obligatorio</span></div>
+            <div class="form-group"><label>Salario base</label><input type="number" id="f-salario-base" step="0.01" min="0" placeholder="0,00" value="${p?.salario_base||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>Complementos</label><input type="number" id="f-complementos" step="0.01" min="0" placeholder="0,00" value="${p?.complementos||''}" oninput="autoCalc(event)"><span class="field-hint">Plus transporte, antigüedad…</span></div>
+            <div class="form-group"><label>Horas extraordinarias</label><input type="number" id="f-horas-extra" step="0.01" min="0" placeholder="0,00" value="${p?.horas_extra||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>Paga extra (prorrateada)</label><input type="number" id="f-paga-extra" step="0.01" min="0" placeholder="0,00" value="${p?.paga_extra||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>Otros devengos</label><input type="number" id="f-otros-devengos" step="0.01" min="0" placeholder="0,00" value="${p?.otros_devengos||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>Total devengos (bruto) *</label><input type="number" id="f-total-devengos" step="0.01" min="0" placeholder="0,00" value="${p?.total_devengos||''}" required oninput="autoCalc(event)"><span class="field-hint">Campo obligatorio</span></div>
           </div>
         </div>
         <div class="form-section deducciones mt-4">
@@ -49,19 +57,19 @@ function renderAnadir(id = null) {
             <span class="field-hint" style="display:inline;margin-left:.5rem">Calcula cotizaciones según el bruto</span>
           </div>
           <div class="form-grid triple">
-            <div class="form-group"><label>SS Contingencias comunes</label><input type="number" id="f-ss-cc" step="0.01" min="0" placeholder="4,70%" value="${p?.ss_contingencias||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>SS Desempleo</label><input type="number" id="f-ss-de" step="0.01" min="0" placeholder="1,55%" value="${p?.ss_desempleo||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>SS Formación profesional</label><input type="number" id="f-ss-fp" step="0.01" min="0" placeholder="0,10%" value="${p?.ss_fp||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>% IRPF</label><input type="number" id="f-irpf-pct" step="0.01" min="0" max="50" placeholder="15,00" value="${p?.irpf_porcentaje||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>IRPF (importe €)</label><input type="number" id="f-irpf" step="0.01" min="0" placeholder="0,00" value="${p?.irpf||''}" oninput="autoCalc()"></div>
-            <div class="form-group"><label>Otras deducciones</label><input type="number" id="f-otras-ded" step="0.01" min="0" placeholder="0,00" value="${p?.otras_deducciones||''}" oninput="autoCalc()"><span class="field-hint">Anticipos, embargos…</span></div>
+            <div class="form-group"><label>SS Contingencias comunes</label><input type="number" id="f-ss-cc" step="0.01" min="0" placeholder="4,70%" value="${p?.ss_contingencias||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>SS Desempleo</label><input type="number" id="f-ss-de" step="0.01" min="0" placeholder="1,55%" value="${p?.ss_desempleo||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>SS Formación profesional</label><input type="number" id="f-ss-fp" step="0.01" min="0" placeholder="0,10%" value="${p?.ss_fp||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>% IRPF</label><input type="number" id="f-irpf-pct" step="0.01" min="0" max="50" placeholder="15,00" value="${p?.irpf_porcentaje||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>IRPF (importe €)</label><input type="number" id="f-irpf" step="0.01" min="0" placeholder="0,00" value="${p?.irpf||''}" oninput="autoCalc(event)"></div>
+            <div class="form-group"><label>Otras deducciones</label><input type="number" id="f-otras-ded" step="0.01" min="0" placeholder="0,00" value="${p?.otras_deducciones||''}" oninput="autoCalc(event)"><span class="field-hint">Anticipos, embargos…</span></div>
           </div>
         </div>
         <div class="form-section resultado mt-4">
           <div class="form-section-title">Resultado</div>
           <div class="form-grid">
             <div class="form-group"><label>Total deducciones</label><input type="number" id="f-total-ded" step="0.01" placeholder="0,00" value="${p?.total_deducciones||''}" readonly style="background:var(--gray-50);color:var(--gray-500)"></div>
-            <div class="form-group"><label>Líquido a percibir (neto) *</label><input type="number" id="f-neto" step="0.01" min="0" placeholder="0,00" value="${p?.neto||''}" required oninput="autoCalc()" style="font-weight:700;font-size:1.05rem"><span class="field-hint">Campo obligatorio</span></div>
+            <div class="form-group"><label>Líquido a percibir (neto) *</label><input type="number" id="f-neto" step="0.01" min="0" placeholder="0,00" value="${p?.neto||''}" required oninput="autoCalc(event)" style="font-weight:700;font-size:1.05rem"><span class="field-hint">Campo obligatorio</span></div>
           </div>
         </div>
         <div class="card mt-4">
@@ -90,7 +98,10 @@ function renderAnadir(id = null) {
     try {
       const data = await parsePDF(file);
       const fields = Object.keys(data).filter(k=>data[k]!=null).length;
-      const set = (id,v) => { const el=document.getElementById(id); if(el&&v!=null&&v!=='') el.value=v; };
+      const set = (id,v) => {
+        const el=document.getElementById(id);
+        if(el&&v!=null&&v!=='') { el.value=v; USER_EDITED.add(id); }
+      };
       set('f-fecha', data.fecha);
       set('f-total-devengos', data.total_devengos?.toFixed(2));
       set('f-neto', data.neto?.toFixed(2));
@@ -110,18 +121,38 @@ function renderAnadir(id = null) {
     }
   }
   
-  function autoCalc() {
+  // Fields the user has typed in directly. We never overwrite these from autoCalc;
+  // everything else is treated as derived and always recomputed.
+  const USER_EDITED = new Set();
+  function markEdited(e) { if (e?.target?.id) USER_EDITED.add(e.target.id); }
+  function resetEditedTracking() { USER_EDITED.clear(); }
+
+  function autoCalc(e) {
+    if (e?.target?.id) USER_EDITED.add(e.target.id);
     const v = id => parseFloat(document.getElementById(id)?.value)||0;
+    const setIf = (id, val) => {
+      const el = document.getElementById(id);
+      if (!el || USER_EDITED.has(id)) return;
+      el.value = val > 0 ? val.toFixed(2) : '';
+    };
+
+    // Total devengos = sum of components (unless user typed it directly)
     const parts = v('f-salario-base')+v('f-complementos')+v('f-horas-extra')+v('f-paga-extra')+v('f-otros-devengos');
-    const totalDev = document.getElementById('f-total-devengos');
-    if (parts>0 && totalDev && !totalDev.value) totalDev.value=parts.toFixed(2);
+    setIf('f-total-devengos', parts);
+
     const bruto = v('f-total-devengos');
-    const irpfPct=v('f-irpf-pct'), irpfEl=document.getElementById('f-irpf');
-    if (irpfPct>0 && bruto>0 && irpfEl && !irpfEl.value) irpfEl.value=(bruto*irpfPct/100).toFixed(2);
-    const totalDed=v('f-ss-cc')+v('f-ss-de')+v('f-ss-fp')+v('f-irpf')+v('f-otras-ded');
-    const tdEl=document.getElementById('f-total-ded'); if(tdEl&&totalDed>0) tdEl.value=totalDed.toFixed(2);
-    const netoEl=document.getElementById('f-neto');
-    if (bruto>0 && totalDed>0 && netoEl && !netoEl.value) netoEl.value=(bruto-totalDed).toFixed(2);
+
+    // IRPF amount = bruto * pct/100 (unless user typed an IRPF amount directly)
+    const irpfPct = v('f-irpf-pct');
+    if (irpfPct > 0 && bruto > 0) setIf('f-irpf', bruto * irpfPct / 100);
+
+    // Total deducciones is always derived (the input is readonly anyway)
+    const totalDed = v('f-ss-cc')+v('f-ss-de')+v('f-ss-fp')+v('f-irpf')+v('f-otras-ded');
+    const tdEl = document.getElementById('f-total-ded');
+    if (tdEl) tdEl.value = totalDed > 0 ? totalDed.toFixed(2) : '';
+
+    // Neto = bruto - deducciones (unless user typed it directly)
+    if (bruto > 0) setIf('f-neto', bruto - totalDed);
   }
   
   function estimateDeductions() {
